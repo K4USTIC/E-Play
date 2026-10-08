@@ -1,0 +1,43 @@
+4.0.0
+
+
+        org.springframework.boot
+        spring-boot-starter-parent
+        3.2.5
+
+
+
+        com.eplay
+        eplay-parent
+        1.0.0
+        pom
+
+        eplay-parent
+
+
+
+        microservicio-compras
+
+
+
+        17
+        2023.0.1
+
+
+
+
+
+        org.springframework.cloud
+        spring-cloud-dependencies
+        ${spring-cloud.version}
+        pom
+        import
+
+
+
+
+
+
+        org.projectlombok
+        lombok
+        true

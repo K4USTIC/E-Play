@@ -1,5 +1,7 @@
 package microservicio_compras;
 
+import microservicio_compras.clients.JuegoClient;
+import microservicio_compras.clients.UsuarioClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,9 +10,23 @@ import org.springframework.web.bind.annotation.*;
 public class CompraController {
 
     private final CompraService service;
+    private final UsuarioClient usuarioClient;
+    private final JuegoClient juegoClient;
 
-    public CompraController(CompraService service) {
+    // Inyectamos los clientes en el constructor
+    public CompraController(CompraService service, UsuarioClient usuarioClient, JuegoClient juegoClient) {
         this.service = service;
+        this.usuarioClient = usuarioClient;
+        this.juegoClient = juegoClient;
+    }
+
+    @GetMapping("/test-comunicacion")
+    public ResponseEntity<String> testComunicacion() {
+        // Hacemos llamadas reales a los otros microservicios
+        String resUsuario = usuarioClient.verificarEstadoUsuario();
+        String resJuego = juegoClient.verificarEstadoJuego();
+
+        return ResponseEntity.ok("Respuesta de Usuarios: " + resUsuario + " | Respuesta de Juegos: " + resJuego);
     }
 
     @PostMapping("/procesar")

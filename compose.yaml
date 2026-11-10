@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: eplay
+      POSTGRES_USER: eplay
+      POSTGRES_PASSWORD: eplay_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eplay -d eplay"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  gateway-service:
+    build:
+      context: ./gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      USUARIOS_SERVICE_URL: http://microservicio-usuarios:8082
+      JUEGOS_SERVICE_URL: http://microservicio-juegos:8083
+      COMPRAS_SERVICE_URL: http://microservicio-compras:8081
+    depends_on:
+      microservicio-compras:
+        condition: service_started
+      microservicio-juegos:
+        condition: service_started
+      microservicio-usuarios:
+        condition: service_started
+
+  microservicio-compras:
+    build:
+      context: ./microservicio-compras
+    ports:
+      - "8081:8081"
+    environment:
+      USUARIOS_SERVICE_URL: http://microservicio-usuarios:8082
+      JUEGOS_SERVICE_URL: http://microservicio-juegos:8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eplay_compras
+      SPRING_DATASOURCE_USERNAME: eplay
+      SPRING_DATASOURCE_PASSWORD: eplay_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      microservicio-juegos:
+        condition: service_started
+      microservicio-usuarios:
+        condition: service_started
+
+  microservicio-usuarios:
+    build:
+      context: ./microservicio-usuarios
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eplay_usuarios
+      SPRING_DATASOURCE_USERNAME: eplay
+      SPRING_DATASOURCE_PASSWORD: eplay_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  microservicio-juegos:
+    build:
+      context: ./microservicio-juegos
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eplay_juegos
+      SPRING_DATASOURCE_USERNAME: eplay
+      SPRING_DATASOURCE_PASSWORD: eplay_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
